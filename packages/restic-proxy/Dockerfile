@@ -1,14 +1,17 @@
 ARG ALPINE_VERSION=3.23
-ARG ALPINE_IMAGE=alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+ARG ALPINE_IMAGE=ghcr.io/loong64/alpine:3.24
 
-FROM golang:1.27.3-alpine${ALPINE_VERSION} AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine${ALPINE_VERSION} AS builder
+ARG TARGETOS
+ARG TARGETARCH
+
 WORKDIR /app
 
 COPY packages/restic-proxy/go.mod packages/restic-proxy/go.sum ./
 RUN go mod download
 
 COPY packages/restic-proxy/ ./
-RUN CGO_ENABLED=0 go build -o /restic-proxy .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /restic-proxy .
 
 FROM ${ALPINE_IMAGE}
 
